@@ -15,6 +15,7 @@ const { foodModel } = require("../model/food.model");
 const { paymentModel } = require("../model/payment.model");
 const { commentModel } = require("../model/comment.model");
 const { promotionModel } = require("../model/promotion.model");
+const { movieTypeModel } = require("../model/movieType.model");
 
 const host = "localhost";
 const port = 3306;
@@ -55,6 +56,7 @@ const Food = foodModel(sequelize, DataTypes);
 const Payment = paymentModel(sequelize, DataTypes);
 const Comment = commentModel(sequelize, DataTypes);
 const Promotion = promotionModel(sequelize, DataTypes);
+const MovieType = movieTypeModel(sequelize, DataTypes);
 
 User.hasMany(Booking, { foreignKey: "userId" });
 Booking.belongsTo(User, { foreignKey: "userId" });
@@ -74,8 +76,16 @@ Cinema.belongsTo(City, { foreignKey: "cityId" });
 Cinema.hasMany(CinemaHall, { foreignKey: "cinemaId" });
 CinemaHall.belongsTo(Cinema, { foreignKey: "cinemaId" });
 
-CinemaHall.hasMany(Seat, { foreignKey: "cinemaHallId" });
-Seat.belongsTo(CinemaHall, { foreignKey: "cinemaHallId" });
+CinemaHall.belongsToMany(Seat, {
+  through: "SeatCinema",
+  foreignKey: "cinemaHallId",
+  timestamps: false,
+});
+Seat.belongsToMany(CinemaHall, {
+  through: "SeatCinema",
+  foreignKey: "seatId",
+  timestamps: false,
+});
 
 CinemaHall.hasMany(Show, { foreignKey: "cinemaHallId" });
 Show.belongsTo(CinemaHall, { foreignKey: "cinemaHallId" });
@@ -105,22 +115,36 @@ Movie.hasMany(Comment, { foreignKey: "movieId" });
 Comment.belongsTo(Movie, { foreignKey: "movieId" });
 
 Comment.belongsTo(Comment, { foreignKey: "parentId" });
-Comment.hasMany(Comment, { foreignKey: "parentId" });
+Comment.hasMany(Comment, { foreignKey: "parentId", as: "replies" });
 
 User.belongsToMany(Promotion, {
   through: "UserPromotion",
   foreignKey: "userId",
-  timestamps: false
+  timestamps: false,
 });
 Promotion.belongsToMany(User, {
   through: "UserPromotion",
   foreignKey: "promotionId",
-  timestamps: false
+  timestamps: false,
 });
 
+Movie.belongsToMany(MovieType, {
+  through: "MovieMovieType",
+  foreignKey: "movieId",
+  timestamps: false,
+});
+MovieType.belongsToMany(Movie, {
+  through: "MovieMovieType",
+  foreignKey: "movieTypeId",
+  timestamps: false,
+});
+
+MovieType.hasMany(Show, { foreignKey: "movieTypeId" });
+Show.belongsTo(MovieType, { foreignKey: "movieTypeId" });
+
 sequelize.sync({
-  force: false,
-  // alter: true
+  force: true,
+  // alter: true,
 });
 
 module.exports = {
@@ -128,16 +152,17 @@ module.exports = {
   User,
   Movie,
   Show,
-  Booking,
-  BookingFood,
-  BookingTicket,
-  City,
   Cinema,
   CinemaHall,
   CinemaHallSeat,
-  Seat,
+  City,
   Food,
+  Seat,
+  Booking,
+  BookingFood,
+  BookingTicket,
   Payment,
-  Comment,
   Promotion,
+  Comment,
+  MovieType,
 };

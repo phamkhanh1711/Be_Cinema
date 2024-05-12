@@ -31,6 +31,10 @@ const promotionModel = (sequelize, DataTypes) => {
         type: DataTypes.DATEONLY,
         allowNull: false,
       },
+      imagePromo:{
+        type: DataTypes.STRING,
+        allowNull: false,
+      }
     },
     {
       timestamps: true,

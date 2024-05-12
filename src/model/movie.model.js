@@ -30,7 +30,7 @@ const movieModel = (sequelize, DataTypes) => {
       
       movieImage: {
         type: DataTypes.STRING,
-        allowNull: false,
+          allowNull: false,
       },
       movieDuration: {
         type: DataTypes.INTEGER,

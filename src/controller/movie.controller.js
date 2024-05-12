@@ -1,5 +1,6 @@
-const { where } = require('sequelize');
-const { Movie } = require('../database/sequelize')
+const { Op } = require('sequelize');
+const { Movie, Show, MovieType } = require('../database/sequelize')
+const moment = require("moment");
 
 
 /*
@@ -15,6 +16,70 @@ const printMovie = async (req, res) => {
         return res.status(500).json({ error: 'Movie not found' });
     }
 }
+
+/*
+Thang
+prints the currently playing movie
+*/
+
+const currentMovie = async (req, res) => {
+    try {
+        let startDate;
+
+        const today = new Date();
+        startDate = moment(today).format("yyyy-MM-DD")
+        const allCurrentMovie = await Movie.findAll({
+            include: {
+                model: Show,
+                where: {
+                    CreateOn: startDate
+                }
+            }
+        });
+
+        return res.status(200).json({
+
+            allCurrentMovie
+
+        });
+    } catch (error) {
+        console.error(error); // Log lỗi
+        return res.status(500).json({ error: "Internal Server Error" }); // Phản hồi lỗi
+    }
+}
+/*
+Thang
+prints the currently playing movie
+print the expected film
+*/
+const upcomingMovie = async (req, res) => {
+    try {
+        let startDate, endDate;
+        const today = new Date();
+        const next_day = new Date(today.setDate(today.getDate() + 1));
+
+        startDate = moment(next_day).format("yyyy-MM-DD")
+        const future = new Date(next_day.setDate(next_day.getDate() + 15));
+        endDate = moment(future).format('yyyy-MM-DD')
+
+        const allUpcomingMovie = await Movie.findAll({
+            include: [
+                {
+                    model: Show,
+                    where: {
+                        CreateOn: { [Op.between]: [startDate, endDate] }
+                    },
+                },
+            ],
+        });
+
+        return res.status(200).json({
+            allUpcomingMovie
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
 /*
 Thang
 Print detail movies from database
@@ -45,14 +110,16 @@ const addMovie = async (req, res) => {
         movieDescription,
         movieDirector,
         movieActor,
-       
+        
         movieImage,
         movieDuration,
         movieRelease,
-        trailer,
+       
         language,
-        country
+        country,
+        movieType
     } = req.body;
+
     try {
         const newMovie = await Movie.create({
             movieName,
@@ -64,20 +131,33 @@ const addMovie = async (req, res) => {
             movieImage,
             movieDuration,
             movieRelease,
-            trailer,
+          
             language,
             country
         });
 
+        const currMovieType = await MovieType.findOne({
+            where: {
+                movieTypeId: movieType
+            }
+        });
+        
+        if (!currMovieType) {
+            return res.status(404).json({ error: 'Movie type not found' });
+        }
+        
+        await currMovieType.addMovie(newMovie);
+        
+
         return res.status(201).json({
-            "Show added successfully :":
-                newMovie
+            "Movie added successfully :": newMovie
         });
     } catch (error) {
         console.error('Error adding user:', error);
         return res.status(500).json({ error: 'Could not add user' });
     }
 }
+
 
 /*
 Thang
@@ -93,9 +173,9 @@ const deleteMovie = async (req, res) => {
         });
 
         if (deletedRows > 0) {
-            return res.status(200).json({ message: `Show with ID ${movieId} deleted successfully.` });
+            return res.status(200).json({ message: `Movie with ID ${movieId} deleted successfully.` });
         } else {
-            return res.status(404).json({ error: `Show with ID ${movieId} not found.` });
+            return res.status(404).json({ error: `Movie with ID ${movieId} not found.` });
         }
     } catch (error) {
         return res.status(500).json({ error: 'Could not delete show.' });
@@ -104,17 +184,9 @@ const deleteMovie = async (req, res) => {
 
 /*
 Thang
-Function to delete multiple movies
-*/
-const deleteMultipleMovie = async () => {
-
-}
-
-/*
-Thang
 Function to edit movies
 */
-const editMovie = async (req, res) => {
+const updateMovie = async (req, res) => {
     const {
         movieId,
         movieName,
@@ -122,6 +194,7 @@ const editMovie = async (req, res) => {
         movieDescription,
         movieDirector,
         movieActor,
+        
         movieImage,
         movieDuration,
         movieRelease,
@@ -129,39 +202,73 @@ const editMovie = async (req, res) => {
         language,
         country
     } = req.body;
+    try {
+        const movieToUpdate = await Movie.findOne({
+            where: {
+                movieId: movieId
+            }
+        });
+        const newMovie = await Movie.update({
+            movieName: movieName || movieToUpdate.movieName,
+            movieCategory: movieCategory || movieToUpdate.movieCategory,
+            movieDescription: movieDescription || movieToUpdate.movieDescription,
+            movieDirector: movieDirector || movieToUpdate.movieDirector,
+            movieActor: movieActor || movieToUpdate.movieActor,
+          
+            movieImage: movieImage || movieToUpdate.movieImage,
+            movieDuration: movieDuration || movieToUpdate.movieDuration,
+            movieRelease: movieRelease || movieToUpdate.movieRelease,
+            trailer: trailer || movieToUpdate.trailer,
+            language: language || movieToUpdate.language,
+            country: country || movieToUpdate.country
+        }, {
+            where: {
+                movieId: movieId,
+            },
+        });
+
+        return res.status(200).json({
+            message: 'Movie updated successfully'
+        });
+    } catch (error) {
+        console.error('Error update Movie:', error);
+        return res.status(500).json({ error: 'Could not update movie' });
+    }
+}
+
+const searchMovies = async (req, res) => {
+    const { movieName } = req.body;
 
     try {
-        const [affectedRows] = await Movie.update(
-            {
-                movieName: movieName,
-                movieCategory: movieCategory,
-                movieDescription: movieDescription,
-                movieDirector: movieDirector,
-                movieActor: movieActor,
-                movieImage: movieImage,
-                movieDuration: movieDuration,
-                movieRelease: movieRelease,
-                trailer: trailer,
-                language: language,
-                country: country
-            },
-            {
-                where: { movieId: movieId } // Đảm bảo rằng bạn có điều kiện where
-            }
-        );
+        // Chuyển đổi movieName thành chữ thường
+        const lowercaseMovieName = movieName.toLowerCase();
 
-        if (affectedRows > 0) {
-            return res.status(200).json({
-                message: 'Movie updated successfully'
-            });
-        } else {
-            return res.status(404).json({
-                error: 'Movie not found'
-            });
+        // Tìm kiếm bộ phim với tên chứa chuỗi tương tự
+        const movieResult = await Movie.findAll({
+            where: {
+                movieName: {
+                    [Op.like]: `%${lowercaseMovieName}%`
+                }
+            }
+        });
+
+        if (movieResult.length === 0) {
+            return res.status(404).json({ error: 'Movie not found' });
         }
+        return res.status(200).json(movieResult);
     } catch (error) {
-        console.error('Error updating movie:', error);
-        return res.status(500).json({ error: 'Could not update movie' });
+        console.error('Error searching movie:', error);
+        return res.status(500).json({ error: 'Could not search movie' });
+    }
+}
+
+const getAllMovieType = async (req, res, next) => {
+    try {
+        const allMovieType = await MovieType.findAll()
+
+        return res.status(200).json({allMovieType})
+    } catch (error) {
+        return next(error)
     }
 }
 
@@ -170,5 +277,9 @@ module.exports = {
     printDetailMovie,
     addMovie,
     deleteMovie,
-    editMovie   
+    updateMovie,
+    searchMovies,
+    currentMovie,
+    upcomingMovie,
+    getAllMovieType
 }

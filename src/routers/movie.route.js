@@ -1,24 +1,32 @@
 const express = require("express");
 const {
-    checkValidate,
-    checkSignUp,
-    checkLogin,
-} = require("../middlewares/authMiddleware");
+    checkLoginAdmin
+} = require("../middlewares/jwtMiddleware");
 
 const {
     addMovie,
     printMovie,
     deleteMovie,
     printDetailMovie,
-    editMovie
+    updateMovie,
+    searchMovies,
+    currentMovie,
+    upcomingMovie,
+    getAllMovieType
 } = require("../controller/movie.controller");
 const movieRouter = express.Router();
 
 movieRouter.route("/add-movie").post(addMovie);
 movieRouter.route("/all-movie").get(printMovie);
-movieRouter.route("/delete-movie/:movieId").delete(deleteMovie);
+movieRouter.route("/all-current-movie").get(currentMovie);
+movieRouter.route("/all-upcoming-movie").get(upcomingMovie);
 movieRouter.route("/detail-movie/:movieId").get(printDetailMovie);
-movieRouter.route("/update-movie/:movieId").put(editMovie);
+movieRouter.route("/delete-movie/:movieId").delete( deleteMovie);
+movieRouter.route("/update-movie/:movieId").put(updateMovie);
+movieRouter.route("/search-movie").get(searchMovies);
+movieRouter.route("/movieType").get(getAllMovieType)
+
+
 module.exports = {
     movieRouter
 };

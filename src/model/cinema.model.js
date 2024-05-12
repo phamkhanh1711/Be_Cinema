@@ -17,7 +17,7 @@ const cinemaModel = (sequelize, DataTypes) => {
         },
         location: {
           type: DataTypes.STRING,
-          allowNull: false,
+          allowNull: true,
         },
       },
       {

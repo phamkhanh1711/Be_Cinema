@@ -11,6 +11,10 @@ const bookingModel = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      createOn:{
+        type: DataTypes.DATEONLY,
+        allowNull: false
+      }
     },
     {
       timestamps: true,

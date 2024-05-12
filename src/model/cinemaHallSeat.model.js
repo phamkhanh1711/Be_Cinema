@@ -10,7 +10,7 @@ const cinemaHallSeatModel = (sequelize, DataTypes) => {
       isBooked: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: 1,
+        defaultValue: false,
       },
       priceSeat: {
         type: DataTypes.INTEGER,
