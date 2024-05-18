@@ -20,7 +20,7 @@ const promotionModel = (sequelize, DataTypes) => {
         allowNull: false,
       },
       discount: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
         allowNull: false,
       },
       startDate: {

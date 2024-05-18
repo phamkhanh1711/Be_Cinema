@@ -5,7 +5,7 @@ const { User } = require("../database/sequelize");
 
 const auth = async (req, res, next) => {
   try {
-    const bearerToken = req.headers.authorization;
+    const bearerToken = req.headers.authorization;  
     if (!bearerToken) {
       return res.status(401).json({
         status: 401,

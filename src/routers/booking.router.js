@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  searchBooking,
   getDetailBooking,
   createBooking,
   getAllBookingforUser,
@@ -19,6 +20,8 @@ bookingRouter.route("/detailBooking/:bookingId").get(getDetailBooking);
 bookingRouter.route("/admin/allBooking").get(getAllBookingforAdmin);
 
 bookingRouter.route("/admin/allBookingofUser/:userId").get(allBookingofUser)
+
+bookingRouter.route("/searchBooking").get(searchBooking)
 module.exports = {
   bookingRouter,
 };

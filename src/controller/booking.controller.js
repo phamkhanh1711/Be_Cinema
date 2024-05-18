@@ -100,22 +100,29 @@ const createBooking = async (req, res, next) => {
 const getAllBookingforUser = async (req, res, next) => {
   try {
     const currUser = await auth(req, res, next);
-    console.log(currUser);
+    console.log(currUser.userId);
     const getAllBooking = await Booking.findAll({
       where: {
         userId: currUser.userId,
       },
+
+     
       include: [
         {
           model: BookingTicket,
           attributes: ["bookingTicketId"],
           include: {
             model: Show,
-            attributes: ["showId"],
-            include: {
-              model: Movie,
-              attributes: ["movieName", "movieImage"],
-            },
+            include: [
+              {
+                model: Movie,
+                attributes: ["movieName", "movieImage"],
+              },
+              {
+                model: CinemaHall,
+                attributes: ["cinemaHallName"],
+              },
+            ],
           },
         },
       ],
@@ -149,15 +156,20 @@ const getDetailBooking = async (req, res, next) => {
 
     const detailBookingTicket = await BookingTicket.findAll({
       where: {
-        bookingId: id,
+        bookingId: bookingId,
       },
       include: [
         {
           model: Show,
-          include: {
+          include:[ 
+            {
+              model: Movie,
+              attributes: ["movieName", "movieImage"],
+            },
+            {
             model: CinemaHall,
             attributes: ["cinemaHallName"],
-          },
+          },]
         },
         {
           model: CinemaHallSeat,
@@ -170,7 +182,7 @@ const getDetailBooking = async (req, res, next) => {
 
     const detailBookingFood = await BookingFood.findAll({
       where: {
-        bookingId: id,
+        bookingId: bookingId,
       },
       include: {
         model: Food,
@@ -187,32 +199,64 @@ const getDetailBooking = async (req, res, next) => {
     return next(error);
   }
 };
-
-/*
- Lịch sử đặt vé cho admin
- */
-
-const getAllBookingforAdmin = async (req, res, next) => {
+const searchBooking = async (req, res, next) => {
   try {
-    const { search } = req.query;
+    const { bookingId } = req.query;
 
-    const searchName = search === "" ? {} : {
-      
-      fullName: { [Op.like]: `%${search}%` }
-    }
-    const getAllBooking = await Booking.findAll({
+    const bookingResult = await Booking.findAll({
+      where: {
+        bookingId: {
+          [Op.like]: `%${bookingId}%`,
+        },
+      },
       include: [
         {
           model: User,
           attributes: ["fullName", "email", "avatar"],
-          where: searchName
+          // where: searchName
         },
         {
           model: BookingTicket,
           attributes: ["bookingTicketId"],
           include: {
             model: Show,
-            attributes: ["showId"],
+            include: {
+              model: Movie,
+              attributes: ["movieName", "movieImage"],
+            },
+          },
+        },
+      ],
+      order: [["createOn", "DESC"]],
+    });
+
+    return res.status(200).json({
+      data: {
+        bookingResult,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+/*
+ Lịch sử đặt vé cho admin
+ */
+
+ const getAllBookingforAdmin = async (req, res, next) => {
+  try {
+    const getAllBooking = await Booking.findAll({
+      include: [
+        {
+          model: User,
+          attributes: ["fullName", "email", "avatar"],
+          // where: searchName
+        },
+        {
+          model: BookingTicket,
+          attributes: ["bookingTicketId"],
+          include: {
+            model: Show,
             include: {
               model: Movie,
               attributes: ["movieName", "movieImage"],
@@ -244,7 +288,7 @@ const getAllBookingforAdmin = async (req, res, next) => {
   } catch (error) {
     return next(error);
   }
-};
+}
 
 // hiện thị lịch sử đặt vé ở admin theo id người dùng
 const allBookingofUser = async (req, res, next) => {
@@ -293,6 +337,7 @@ const allBookingofUser = async (req, res, next) => {
 };
 
 module.exports = {
+  searchBooking,
   getAllBookingforUser,
   getDetailBooking,
   createBooking,

@@ -4,7 +4,7 @@ const { checkPromotion, createPromotion, getDetailPromo, updatePromotion, getAll
 const promoRouter = express.Router();
 
 //tạo vé khuyến mãi
-promoRouter.route("/").post(createPromotion)
+promoRouter.route("/ticketfree").post(createPromotion)
 
 // cập nhật vé
 promoRouter.route("/updatePromo/:promotionId").put(updatePromotion)

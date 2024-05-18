@@ -47,7 +47,7 @@ const createSeat = async () => {
   }
   console.log("3");
 };
-// createSeat();
+createSeat();
 
 const createCinemaHall = async () => {
   try {
@@ -61,7 +61,7 @@ const createCinemaHall = async () => {
       const cinemaHall = await CinemaHall.create({
         cinemaHallName: elem_name,
         totalSeat: 102,
-        cinemaId: 1
+        cinemaId: currCinema.cinemaId
       });
       
     }
@@ -94,7 +94,7 @@ const createCinemaSeat = async () => {
   }
   console.log("5");
 };
-// setTimeout(createCinemaSeat,10000)
+ setTimeout(createCinemaSeat,10000)
 
 const createMovieType = async () => {
   try {
@@ -108,7 +108,7 @@ const createMovieType = async () => {
   }
 };
 
-// createMovieType();
+ createMovieType();
 
 const get = async () => {
   try {

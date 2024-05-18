@@ -143,7 +143,7 @@ MovieType.hasMany(Show, { foreignKey: "movieTypeId" });
 Show.belongsTo(MovieType, { foreignKey: "movieTypeId" });
 
 sequelize.sync({
-  force: true,
+  force: false,
   // alter: true,
 });
 

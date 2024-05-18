@@ -77,6 +77,7 @@ const createShow = async (req, res, next) => {
           movieId: currMovie.movieId,
           movieTypeId: currMovieType.movieTypeId,
         });
+        
         for (let index = 0; index < currCinemaHall.Seats.length; index++) {
           let price;
           if (currCinemaHall.Seats[index].type === "doi") {

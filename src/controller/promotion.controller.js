@@ -1,6 +1,7 @@
 const { Promotion, User } = require("../database/sequelize");
 const moment = require("moment");
 const { auth } = require("../middlewares/jwtMiddleware");
+const { Op } = require("sequelize");
 
 //Tạo vé khuyến mãi
 const createPromotion = async (req, res, next) => {
@@ -134,7 +135,7 @@ const getAllPromoUser = async (req, res, next) => {
     const endDate = moment(today).format("yyyy-MM-DD");
     const allPromoUser = await Promotion.findAll({
       where: {
-        endDate: { [Op.gte]: endDate },
+        endDate: {[Op.gte]: endDate },
       },
     });
 
@@ -151,9 +152,21 @@ const getAllPromoUser = async (req, res, next) => {
 // kiểm tra vé khuyến mãi đã được dùng chưa
 const checkPromotion = async (req, res, next) => {
   try {
-    const { code } = req.body;
+    const { code } = req.query;
     const currUser = await auth(req, res, next);
+    const check = await Promotion.findOne({
+      where: {
+        code: code,
+      },
+    });
+    if(check === null){
+      return res.status(400).json({
+        message: "Mã khuyến mãi không tồn tại",
+      });
+    }
+
     if (code !== "") {
+      
       const checkPromo = await Promotion.findOne({
         where: {
           code: code,
@@ -167,7 +180,9 @@ const checkPromotion = async (req, res, next) => {
           },
         ],
       });
+      console.log(checkPromo);
       if (checkPromo !== null) {
+        console.log(1);
         return res.status(400).json({
           message: "Mã khuyến mãi đã được dùng",
         });
@@ -183,7 +198,7 @@ const checkPromotion = async (req, res, next) => {
         });
       }
     } else {
-      return res.status(200).json();
+      return res.status(400).json();
     }
   } catch (error) {
     return next(error);
