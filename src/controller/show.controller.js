@@ -14,13 +14,13 @@ const moment = require("moment");
 const createShow = async (req, res, next) => {
   try {
     const {
-      CreateOn, // ngày tạo lịch chiếu (yyyy-MM-dd)
-      startTime,  // giờ bắt đầu chiếu (HH:mm)
-      endTime, // giờ kết thúc chiếu (HH:mm)
-      cinemaHallName, // tên rạp chiếu
-      typeName, // loại phim 2D, 3D, 4D
-      movieName, // tên phim
-      priceSeat, // giá vé
+      CreateOn,
+      startTime,
+      endTime,
+      cinemaHallName,
+      typeName,
+      movieName,
+      priceSeat,
     } = req.body;
     if (startTime >= endTime) {
       return res.status(400).json({
@@ -32,75 +32,89 @@ const createShow = async (req, res, next) => {
           movieName: movieName,
         },
       });
-      const currMovieType = await MovieType.findOne({
-        where: {
-          typeName: typeName,
-        },
-      });
+      if (currMovie === null) {
+        return res.status(400).json({
+          message: "Phim không tồn tại",
+        });
+      } else {
+        const currMovieType = await MovieType.findOne({
+          where: {
+            typeName: typeName,
+          },
+          include: {
+            model: Movie,
+            where: {
+              movieName: movieName,
+            },
+          },
+        });
+        if (currMovieType === null) {
+          return res.status(400).json({
+            message: "Phim không có loại phim này",
+          });
+        } else {
+          const currCinemaHall = await CinemaHall.findOne({
+            where: {
+              cinemaHallName: cinemaHallName,
+            },
+            include: {
+              model: Seat,
+            },
+          });
 
-      const currCinemaHall = await CinemaHall.findOne({
-        where: {
-          cinemaHallName: cinemaHallName,
-        },
-        include: {
-          model: Seat,
-        },
-      });
-
-      const verifyShow = await Show.findAll({
-        where: {
-          cinemaHallId: currCinemaHall.cinemaHallId,
-          CreateOn: CreateOn,
-          [Op.or]: [
-            {
-              [Op.and]: [
-                { startTime: { [Op.lt]: endTime } },
-                { endTime: { [Op.gt]: startTime } },
+          const verifyShow = await Show.findAll({
+            where: {
+              cinemaHallId: currCinemaHall.cinemaHallId,
+              CreateOn: CreateOn,
+              [Op.or]: [
+                {
+                  [Op.and]: [
+                    { startTime: { [Op.lt]: endTime } },
+                    { endTime: { [Op.gt]: startTime } },
+                  ],
+                },
+                {
+                  startTime: { [Op.gt]: startTime },
+                  endTime: { [Op.lt]: endTime },
+                },
               ],
             },
-            {
-              startTime: { [Op.gt]: startTime },
-              endTime: { [Op.lt]: endTime },
-            },
-          ],
-        },
-      });
-
-      if (verifyShow.length > 0) {
-        return res.status(409).json({ message: "Lịch chiếu đã bị trùng" });
-      } else {
-        const newShow = await Show.create({
-          CreateOn: CreateOn,
-          startTime: startTime,
-          endTime: endTime,
-          cinemaHallId: currCinemaHall.cinemaHallId,
-          movieId: currMovie.movieId,
-          movieTypeId: currMovieType.movieTypeId,
-        });
-        
-        for (let index = 0; index < currCinemaHall.Seats.length; index++) {
-          let price;
-          if (currCinemaHall.Seats[index].type === "doi") {
-            console.log(1);
-            price = priceSeat * 2;
-          } else {
-            price = priceSeat;
-          }
-          const newCinemaHallSeat = await CinemaHallSeat.create({
-            priceSeat: price,
-            showId: newShow.showId,
-            seatId: currCinemaHall.Seats[index].seatId,
           });
+
+          if (verifyShow.length > 0) {
+            return res.status(409).json({ message: "Lịch chiếu đã bị trùng" });
+          } else {
+            const newShow = await Show.create({
+              CreateOn: CreateOn,
+              startTime: startTime,
+              endTime: endTime,
+              cinemaHallId: currCinemaHall.cinemaHallId,
+              movieId: currMovie.movieId,
+              movieTypeId: currMovieType.movieTypeId,
+            });
+            for (let index = 0; index < currCinemaHall.Seats.length; index++) {
+              let price;
+              if (currCinemaHall.Seats[index].type === "doi") {
+                price = priceSeat * 2;
+              } else {
+                price = priceSeat;
+              }
+              const newCinemaHallSeat = await CinemaHallSeat.create({
+                priceSeat: price,
+                showId: newShow.showId,
+                seatId: currCinemaHall.Seats[index].seatId,
+              });
+            }
+            return res.status(200).json({
+              message: "Tạo lịch chiếu thành công",
+            });
+          }
         }
-        return res.status(200).json({
-          message: "Tạo lịch chiếu thành công",
-        });
       }
+    }} catch (error) {
+      return next(error);
     }
-  } catch (error) {
-    return next(error);
-  }
-};
+  };
 
 // Cập nhật lịch chiếu
 const updateShow = async (req, res, next) => {

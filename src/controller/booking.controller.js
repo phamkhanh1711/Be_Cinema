@@ -161,15 +161,15 @@ const getDetailBooking = async (req, res, next) => {
       include: [
         {
           model: Show,
-          include:[ 
+          include: [
             {
               model: Movie,
               attributes: ["movieName", "movieImage"],
             },
             {
-            model: CinemaHall,
-            attributes: ["cinemaHallName"],
-          },]
+              model: CinemaHall,
+              attributes: ["cinemaHallName"],
+            },]
         },
         {
           model: CinemaHallSeat,
@@ -188,11 +188,24 @@ const getDetailBooking = async (req, res, next) => {
         model: Food,
       },
     });
+    let ticketPrice = 0
+    for (const tickets of detailBookingTicket) {
+      ticketPrice = ticketPrice + tickets.ticketPrice
+    }
+    console.log(ticketPrice);
+    let foodPrice = 0
+    for (const foods of detailBookingFood) {
+      foodPrice = foodPrice + foods.priceFood
+    }
+    console.log(foodPrice);
+    let prommoPrice = (ticketPrice + foodPrice) -  detailBooking.totalPrice 
+    console.log(prommoPrice);
     return res.status(200).json({
       data: {
         detailBooking,
         detailBookingTicket,
         detailBookingFood,
+        prommoPrice
       },
     });
   } catch (error) {

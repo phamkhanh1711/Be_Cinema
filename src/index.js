@@ -34,11 +34,11 @@ app.use("/booking", bookingRouter);
 app.use("/comment", commentRouter)
 app.use("/show", showRouter)
 app.use("/promotion", promoRouter)
-app.use("/seat",seatRouter)
+app.use("/seat", seatRouter)
 app.use("/movie", movieRouter)
 app.use("/user", userRouter);
 app.use("/food", foodRouter);
-app.use("/cinemaHall",cinemaHallRouter)
+app.use("/cinemaHall", cinemaHallRouter)
 app.use("/payment", paymentRouter)
 sequelize
   .authenticate()

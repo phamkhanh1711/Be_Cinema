@@ -191,7 +191,7 @@ const checkPromotion = async (req, res, next) => {
           where: {
             code: code,
           },
-          attributes: ["discount"],
+          attributes: ["discount","code"],
         });
         return res.status(200).json({
           currPromo, 

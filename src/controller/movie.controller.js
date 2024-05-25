@@ -10,13 +10,12 @@ Print all movies in database
 
 const printMovie = async (req, res) => {
     try {
-        const allMovies = await Movie.findAll()
+        const allMovies = await Movie.findAll({include:{model: MovieType}})
         res.status(200).json(allMovies);
     } catch (error) {
         return res.status(500).json({ error: 'Movie not found' });
     }
 }
-
 /*
 Thang
 prints the currently playing movie
@@ -105,58 +104,59 @@ Function add a new movie
 */
 const addMovie = async (req, res) => {
     const {
-        movieName,
-        movieCategory,
-        movieDescription,
-        movieDirector,
-        movieActor,
-        
-        movieImage,
-        movieDuration,
-        movieRelease,
-       
-        language,
-        country,
-        movieType
+      movieName,
+      movieCategory,
+      movieDescription,
+      movieDirector,
+      movieActor,
+      movieImage,
+      movieDuration,
+      movieRelease,
+      trailer,
+      language,
+      country,
+      movieType,
     } = req.body;
-
     try {
+      const movieResult = await Movie.findAll({
+        where: {
+          movieName: movieName,
+        },
+      });
+      if (movieResult.length !== 0) {
+        return res.status(405).json({ message: "Phim đã được tạo" });
+      } else {
         const newMovie = await Movie.create({
-            movieName,
-            movieCategory,
-            movieDescription,
-            movieDirector,
-            movieActor,
-           
-            movieImage,
-            movieDuration,
-            movieRelease,
-          
-            language,
-            country
+          movieName,
+          movieCategory,
+          movieDescription,
+          movieDirector,
+          movieActor,
+          movieImage,
+          movieDuration,
+          movieRelease,
+          trailer,
+          language,
+          country,
         });
-
-        const currMovieType = await MovieType.findOne({
+        for (const movieTypeId of movieType) {
+          const currMovieType = await MovieType.findOne({
             where: {
-                movieTypeId: movieType
-            }
-        });
-        
-        if (!currMovieType) {
-            return res.status(404).json({ error: 'Movie type not found' });
+              movieTypeId: movieTypeId,
+            },
+          });
+  
+          await currMovieType.addMovie(newMovie);
         }
-        
-        await currMovieType.addMovie(newMovie);
-        
-
         return res.status(201).json({
-            "Movie added successfully :": newMovie
+          "Movie added successfully :": newMovie,
         });
+      }
     } catch (error) {
-        console.error('Error adding user:', error);
-        return res.status(500).json({ error: 'Could not add user' });
+      console.error("Error adding movie:", error);
+      return res.status(500).json({ error: "Could not add movie" });
     }
-}
+  };
 
 
 /*

@@ -18,7 +18,7 @@ const { promotionModel } = require("../model/promotion.model");
 const { movieTypeModel } = require("../model/movieType.model");
 
 const host = "localhost";
-const port = 3306;
+const port = "";
 const user = "root";
 const password = null;
 const databaseName = "movie";

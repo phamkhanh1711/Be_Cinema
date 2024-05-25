@@ -10,7 +10,7 @@ promoRouter.route("/ticketfree").post(createPromotion)
 promoRouter.route("/updatePromo/:promotionId").put(updatePromotion)
 
 //hiển thị toàn bộ vé cho admin
-promoRouter.route("/allPromo").get(getAllPromotion)
+promoRouter.route("/allPromo").get(checkLoginAdmin,getAllPromotion)
 
 //hiển thị toàn bộ vé bên người dùng
 promoRouter.route("/allPromoUser").get(getAllPromoUser)
