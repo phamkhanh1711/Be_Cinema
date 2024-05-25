@@ -21,7 +21,7 @@ const host = "localhost";
 const port = "";
 const user = "root";
 const password = null;
-const databaseName = "movieticket";
+const databaseName = "movie";
 
 const pool = mysql.createPool({ host, port, user, password });
 pool.query(`CREATE DATABASE IF NOT EXISTS ${databaseName}`);
