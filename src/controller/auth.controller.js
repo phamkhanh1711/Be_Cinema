@@ -17,9 +17,10 @@ const signUp = async (req, res, next) => {
     } else if (role && role.toLowerCase() === "user"){
       userRole = 3;
     }
-  else{ 
-    userRole = 2;
-  }
+    else{
+      userRole = 2;
+    }
+  
     
     const newUser = await User.create({
       fullName,

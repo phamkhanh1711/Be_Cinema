@@ -1,7 +1,12 @@
 const { User } = require("../database/sequelize");
 const { auth } = require("../middlewares/jwtMiddleware");
+const { Booking } = require("../database/sequelize");
+const { Op } = require("sequelize");
+const { sequelize } = require("../database/sequelize");
 const getUsers = async (req, res, next) => {
   try {
+    const month = new Date().getMonth() + 1;
+    const year = new Date().getFullYear();
     const users = await User.findAll({
       where: {
         role: 3,
@@ -9,9 +14,58 @@ const getUsers = async (req, res, next) => {
       order: [["createdAt", "ASC"]],
     });
 
+    const usersWithTotalPrice = await Promise.all(
+      users.map(async (user) => {
+        const bookings = await Booking.findAll({
+          where: {
+            [Op.and]: [
+              sequelize.where(
+                sequelize.fn("Year", sequelize.col("createOn")),
+                year
+              ),
+              sequelize.where(
+                sequelize.fn("Month", sequelize.col("createOn")),
+                month
+              ),
+              { userId: user.userId },
+            ],
+          },
+        });
+
+        let Price = 0;
+        for (const booking of bookings) {
+          // Sum the price of all tickets for the booking
+          Price = Price + booking.totalPrice;
+        }
+
+        // Add totalPrice to user data
+        return {
+          ...user.toJSON(),
+          Price,
+        };
+      })
+    );
+    let totalPrice = 0;
+    const totalPriceBooking = await Booking.findAll({
+      attributes: [
+        [sequelize.fn("SUM", sequelize.col("totalPrice")), "totalRevenue"],
+      ],
+      where: {
+        [Op.and]: [
+          sequelize.where(
+            sequelize.fn("Year", sequelize.col("createOn")),
+            year
+          ),
+          sequelize.where(sequelize.fn("Month", sequelize.col("createOn")), month),
+        ],
+      },
+      raw: true
+    });
+    if (totalPriceBooking[0].totalRevenue !== null) {
+      totalPrice = totalPriceBooking;
+    }
     return res.status(200).json({
-      status: 200,
-      data: users,
+      data: { users:usersWithTotalPrice, totalPrice:totalPrice },
     });
   } catch (error) {
     return next(error);

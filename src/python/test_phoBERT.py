@@ -72,7 +72,7 @@ def tokenize_and_convert_to_features(text):
 # ----------------------------------------------
 if __name__ == "__main__":
     loaded_model = joblib.load(
-        "D:\Capstone 2 - nhom 22\khuong\Capstone_2\BE_node\src\python\svm_model.joblib"
+        "D:\Capstone 2 - nhom 22\BackEnd-khanh\Be_Cinema\src\python\sentiment_model.joblib"
     )
     if len(sys.argv) > 1:
         input_text = sys.argv[1]

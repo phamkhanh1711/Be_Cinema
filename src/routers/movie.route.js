@@ -4,6 +4,7 @@ const {
 } = require("../middlewares/jwtMiddleware");
 
 const {
+   
     addMovie,
     printMovie,
     deleteMovie,
@@ -17,7 +18,7 @@ const {
 const movieRouter = express.Router();
 
 movieRouter.route("/add-movie").post(addMovie);
-movieRouter.route("/all-movie").get(printMovie);
+movieRouter.route("/all-movie").get(checkLoginAdmin , printMovie);
 movieRouter.route("/all-current-movie").get(currentMovie);
 movieRouter.route("/all-upcoming-movie").get(upcomingMovie);
 movieRouter.route("/detail-movie/:movieId").get(printDetailMovie);
